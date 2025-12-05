@@ -1,38 +1,35 @@
 #include <ESP8266WiFi.h>
 #include <espnow.h>
 #include <ESP8266WebServer.h>
-#define PINO_RELE 5        // D1 no Wemos/NodeMCU
-#define PINO_RELE_1 5 // D1 no Wemos/NodeMCU [cite: 1]
-#define PINO_RELE_2 4 // D2 no Wemos/NodeMCU (Se for um NodeMCU, D2 é GPIO4)
+#define PINO_RELE 5        /
+#define PINO_RELE_1 5 
+#define PINO_RELE_2 4 
 bool modo_edicao = false;
-// --- Variáveis de Controle para PINO_RELE_1 (D1) ---
-float limite_high_1 = 18.0;   // Ligar acima de [cite: 1, 2]
-float limite_low_1 = 15.0;    // Desligar abaixo de [cite: 2]
-bool estado_rele_1 = false;   // Estado atual do relé 1 [cite: 2]
 
-// --- Variáveis de Controle para PINO_RELE_2 (D2) ---
-// Modos de Operação: 0=Manual, 1=Condicional
+float limite_high_1 = 18.0;   
+float limite_low_1 = 15.0;    
+bool estado_rele_1 = false;   
+
+
 int modo_operacao_2 = 1; 
 
-// Ação Manual: 0=OFF (LOW), 1=ON (HIGH)
-int acao_manual_2 = 0; 
 
-// Lógica Condicional (Comparações): 0: OFF (se Condição OK), 1: ON (se Condição OK)
+
 int acao_condicional_2 = 1; 
 // PIN D1
-int modo_operacao_1 = 1;      // Modos de Operação: 0=Manual, 1=Condicional
-int acao_manual_1 = 0;        // Ação Manual: 0=OFF, 1=ON
-int acao_condicional_1 = 1;   // Ação Condicional: 0: OFF, 1: ON
-int condicao_op_1_1 = 0;      // Condição 1: 0: >=, 1: <=, 2: Desabilitada
+int modo_operacao_1 = 1;      
+int acao_manual_1 = 0;       
+int acao_condicional_1 = 1; 
+int condicao_op_1_1 = 0;     
 float condicao_val_1_1 = 20.0;
-int condicao_op_2_1 = 2;      // Condição 2: 0: >=, 1: <=, 2: Desabilitada
+int condicao_op_2_1 = 2;  
 float condicao_val_2_1 = 10.0;
-// Condição 1: 0: >= (Maior/Igual), 1: <= (Menor/Igual), 2: Desabilitada
+
 int condicao_op_1 = 0; 
 float condicao_val_1 = 20.0;
-int condicao_op_1_2 = 0;      // Condição 1: 0: >=, 1: <=, 2: Desabilitada
+int condicao_op_1_2 = 0;    
 float condicao_val_1_2 = 25.0;
-int condicao_op_2_2 = 2;      // Condição 2: 0: >=, 1: <=, 2: Desabilitada
+int condicao_op_2_2 = 2;     
 float condicao_val_2_2 = 15.0;
 bool estado_rele_2 = false;
 
@@ -62,12 +59,12 @@ void add_to_history(float temp) {
   temp_history[HISTORY_SIZE - 1] = temp;
 }
 void verificarTemperatura() {
-  // Aplica a lógica unificada para o Pino D1
+
   aplicarLogicaPino(PINO_RELE_1, modo_operacao_1, acao_manual_1, acao_condicional_1, 
                     condicao_op_1_1, condicao_val_1_1, condicao_op_2_1, condicao_val_2_1, 
                     estado_rele_1);
 
-  // Aplica a lógica unificada para o Pino D2
+
   aplicarLogicaPino(PINO_RELE_2, modo_operacao_2, acao_manual_2, acao_condicional_2, 
                     condicao_op_1_2, condicao_val_1_2, condicao_op_2_2, condicao_val_2_2, 
                     estado_rele_2);
@@ -88,49 +85,47 @@ void aplicarLogicaPino(int pino, int modo_operacao, int acao_manual, int acao_co
     }
     
   } else { 
-    // --- MODO CONDICIONAL ---
+
     bool condicao_1_ok = false;
     bool condicao_2_ok = false;
 
-    // Avalia Condição 1
-    if (condicao_op_1 == 0) { // >=
+    if (condicao_op_1 == 0) {
       condicao_1_ok = (ultima_temp >= condicao_val_1);
-    } else if (condicao_op_1 == 1) { // <=
+    } else if (condicao_op_1 == 1) { 
       condicao_1_ok = (ultima_temp <= condicao_val_1);
-    } else { // Desabilitada (2)
+    } else { 
       condicao_1_ok = true;
     }
 
-    // Avalia Condição 2
-    if (condicao_op_2 == 0) { // >=
+
+    if (condicao_op_2 == 0) {
       condicao_2_ok = (ultima_temp >= condicao_val_2);
-    } else if (condicao_op_2 == 1) { // <=
+    } else if (condicao_op_2 == 1) {
       condicao_2_ok = (ultima_temp <= condicao_val_2);
-    } else { // Desabilitada (2)
+    } else { 
       condicao_2_ok = true;
     }
 
-    // Verifica se TODAS as condições ativas foram atendidas
+
     bool condicoes_ok = condicao_1_ok && condicao_2_ok;
 
     if (condicoes_ok) {
-      // Se a condição for VERDADEIRA, executa a AÇÃO CONFIGURADA
-      if (acao_condicional == 1) { // Configurado para LIGAR
+  
+      if (acao_condicional == 1) { 
         digitalWrite(pino, HIGH);
         estado_rele = true;
-      } else { // Configurado para DESLIGAR
+      } else { 
         digitalWrite(pino, LOW);
         estado_rele = false;
       }
     } else {
-      // Se a condição for FALSA, executa o INVERSO da ação configurada
-      // (Isso evita que o relé fique "travado" no estado anterior)
+
       if (acao_condicional == 1) { 
-        // Se era pra LIGAR quando quente, agora DESLIGA porque esfriou
+
         digitalWrite(pino, LOW);
         estado_rele = false;
       } else { 
-        // Se era pra DESLIGAR quando quente, agora LIGA porque esfriou
+
         digitalWrite(pino, HIGH);
         estado_rele = true;
       }
@@ -140,12 +135,10 @@ void aplicarLogicaPino(int pino, int modo_operacao, int acao_manual, int acao_co
 
 String gerarHtmlControle() {
   String html = "";
-  
-  // --- CORREÇÃO AQUI: Os nomes devem bater com o prefixo "p1_" gerado no HTML ---
-  
-  // Processamento do Formulário D1
+
+
   if (server.hasArg("salvar_d1")) {
-    // Antes estava "modo_operacao_1", mudamos para "p1_modo_operacao"
+
     modo_operacao_1 = server.arg("p1_modo_operacao").toInt(); 
     acao_manual_1 = server.arg("p1_acao_manual").toInt();
     acao_condicional_1 = server.arg("p1_acao_condicional").toInt(); 
@@ -156,12 +149,12 @@ String gerarHtmlControle() {
     condicao_val_2_1 = server.arg("p1_condicao_val_2").toFloat();
     
     verificarTemperatura();
-    modo_edicao = false; // Sai do modo edição após salvar
+    modo_edicao = false; 
   }
 
-  // Processamento do Formulário D2
+
   if (server.hasArg("salvar_d2")) {
-    // Antes estava "modo_operacao_2", mudamos para "p2_modo_operacao"
+
     modo_operacao_2 = server.arg("p2_modo_operacao").toInt();
     acao_manual_2 = server.arg("p2_acao_manual").toInt(); 
     acao_condicional_2 = server.arg("p2_acao_condicional").toInt(); 
@@ -172,30 +165,30 @@ String gerarHtmlControle() {
     condicao_val_2_2 = server.arg("p2_condicao_val_2").toFloat();
     
     verificarTemperatura();
-    modo_edicao = false; // Sai do modo edição após salvar
+    modo_edicao = false;
   }
   
-  // Processamento do Botão de Alternar Modo de Edição
+
   if (server.hasArg("toggle_edicao")) {
     modo_edicao = !modo_edicao;
   }
   
-  // Se não estiver em modo de edição, apenas exibe o status e o botão de editar
+
   if (!modo_edicao) {
     html += "<div class='card'>";
     html += "<h3>Status de automação</h3>";
     
-    // Status D1
+
     String corStatus1 = estado_rele_1 ? "green" : "gray";
     String textoStatus1 = estado_rele_1 ? "LIGADO (HIGH)" : "DESLIGADO (LOW)";
     html += "<p>Status Porta D1: <strong style='color:" + corStatus1 + "'>" + textoStatus1 + "</strong></p>";
     
-    // Status D2
+
     String corStatus2 = estado_rele_2 ? "green" : "gray";
     String textoStatus2 = estado_rele_2 ? "LIGADO (HIGH)" : "DESLIGADO (LOW)";
     html += "<p>Status Porta D2: <strong style='color:" + corStatus2 + "'>" + textoStatus2 + "</strong></p>";
 
-    // Botão para entrar em modo de edição
+
     html += "<form action='/' method='POST'><input type='hidden' name='toggle_edicao' value='1'>";
     html += "<input type='submit' value='Entrar em Modo de CONFIGURAÇÃO' style='background:#f90;color:#fff;border:none;padding:8px 16px;border-radius:4px;cursor:pointer;margin-top:10px;'>";
     html += "</form>";
@@ -204,7 +197,7 @@ String gerarHtmlControle() {
     return html;
   }
 
-  // --- Modo de Edição Ativo (Exibe os formulários) ---
+
   html += "<div class='card' style='border-color:#f90;'>";
   html += "<h3>&#x1F527; Modo de Edição Ativo</h3>";
   html += "<form action='/' method='POST'><input type='hidden' name='toggle_edicao' value='1'>";
@@ -212,7 +205,7 @@ String gerarHtmlControle() {
   html += "</form>";
   html += "</div>";
 
-  // Função auxiliar para gerar o bloco de controle para o pino
+
   auto gerarBlocoControle = [&](int pino_num, int &modo_op, int &acao_man, int &acao_cond, int &cond_op_1, float &cond_val_1, int &cond_op_2, float &cond_val_2) {
     String pinoStr = String(pino_num);
     String prefixo = "p" + pinoStr + "_";
@@ -223,14 +216,14 @@ String gerarHtmlControle() {
     
     bloco += "<form action='/' method='POST'>";
     
-    // Campo de Modo
+
     bloco += "<label style='display:block;margin-bottom:8px;'>Modo de Operação:</label>";
     bloco += "<select name='" + prefixo + "modo_operacao' style='padding:5px;width:100%;margin-bottom:15px;' onchange='document.getElementById(\"" + prefixo + "manual\").style.display=this.value===\"0\"?\"block\":\"none\";document.getElementById(\"" + prefixo + "condicional\").style.display=this.value===\"1\"?\"block\":\"none\";'>";
     bloco += "<option value='1'" + String(modo_op == 1 ? " selected" : "") + ">Condicional (Termostato)</option>";
     bloco += "<option value='0'" + String(modo_op == 0 ? " selected" : "") + ">Manual (Ligar/Desligar)</option>";
     bloco += "</select>";
 
-    // Seção Manual
+
     bloco += "<div id='" + prefixo + "manual' style='display:" + String(modo_op == 0 ? "block" : "none") + ";border:1px dashed #ccc;padding:10px;margin-bottom:15px;'>";
     bloco += "<label style='display:block;margin-bottom:5px;'>Ação Manual:</label>";
     bloco += "<select name='" + prefixo + "acao_manual' style='padding:5px;'>";
@@ -239,7 +232,6 @@ String gerarHtmlControle() {
     bloco += "</select>";
     bloco += "</div>";
 
-    // Seção Condicional
     bloco += "<div id='" + prefixo + "condicional' style='display:" + String(modo_op == 1 ? "block" : "none") + ";border:1px dashed #ccc;padding:10px;margin-bottom:15px;'>";
     bloco += "<label style='display:block;margin-bottom:10px;'>Ação a Executar se Condições OK:</label>";
     bloco += "<select name='" + prefixo + "acao_condicional' style='padding:5px;margin-bottom:15px;'>";
@@ -247,7 +239,7 @@ String gerarHtmlControle() {
     bloco += "<option value='0'" + String(acao_cond == 0 ? " selected" : "") + ">DESLIGAR (LOW)</option>";
     bloco += "</select>";
 
-    // Condição 1
+
     bloco += "<p>Condição 1 (Temperatura):</p>";
     bloco += "<select name='" + prefixo + "condicao_op_1' style='padding:5px;'>";
     bloco += "<option value='0'" + String(cond_op_1 == 0 ? " selected" : "") + ">MAIOR OU IGUAL (>=)</option>";
@@ -258,7 +250,7 @@ String gerarHtmlControle() {
     
     bloco += "<hr style='margin:10px 0;'>";
     
-    // Condição 2
+
     bloco += "<p>Condição 2 (Temperatura):</p>";
     bloco += "<select name='" + prefixo + "condicao_op_2' style='padding:5px;'>";
     bloco += "<option value='0'" + String(cond_op_2 == 0 ? " selected" : "") + ">MAIOR OU IGUAL (>=)</option>";
@@ -275,7 +267,7 @@ String gerarHtmlControle() {
     return bloco;
   };
   
-  // Gera e adiciona os blocos de controle para D1 e D2
+
   html += gerarBlocoControle(1, modo_operacao_1, acao_manual_1, acao_condicional_1, condicao_op_1_1, condicao_val_1_1, condicao_op_2_1, condicao_val_2_1);
   html += gerarBlocoControle(2, modo_operacao_2, acao_manual_2, acao_condicional_2, condicao_op_1_2, condicao_val_1_2, condicao_op_2_2, condicao_val_2_2);
 
@@ -345,39 +337,34 @@ void handleRoot() {
   
 
 
-pagina += "<div class='card'>"; // O estilo 'card' já alinha o conteúdo principal à esquerda
+pagina += "<div class='card'>"; 
   pagina += "<h3> Integrantes do Projeto</h3>";
   
-  // Lista Não Ordenada, removendo qualquer centralização forçada
+
   pagina += "<ul style='list-style-type:disc; padding-left: 20px; margin: 10px 0; text-align:left;'>"; // list-style-type:disc adiciona bolinhas
   
-  // Membro 1
+
   pagina += "<li style='font-size:16px; margin-bottom: 8px;'>";
   pagina += "<strong>Gustavo Soares Rodrigues</strong><br>";
   pagina += "<small style='color:#555;'>gsr21@aluno.ifnmg.edu.br</small></li>";
-  
-  // Membro 2
+
   pagina += "<li style='font-size:16px; margin-bottom: 8px;'>";
   pagina += "<strong>Eduardo Alves de Oliveira</strong><br>";
   pagina += "<small style='color:#555;'>eao7@aluno.ifnmg.edu.br</small></li>";
-  
-  // Membro 3
+
   pagina += "<li style='font-size:16px; margin-bottom: 8px;'>";
   pagina += "<strong>Gustavo Alves de Oliveira</strong><br>";
   pagina += "<small style='color:#555;'>gao7@aluno.ifnmg.edu.br</small></li>";
   
-  // Membro 4
   pagina += "<li style='font-size:16px; margin-bottom: 8px;'>";
   pagina += "<strong>Milena Soares Silva</strong><br>";
   pagina += "<small style='color:#555;'>mss49@aluno.ifnmg.edu.br</small></li>";
   
   pagina += "</ul>";
-  // Informação extra alinhada à esquerda
+
   pagina += "<small style='color:#777; display:block; padding-left: 5px;'>Trabalho desenvolvido para a disciplina de UCE 2 (2025).</small>";
   pagina += "</div>";
-  // =========================================================
-  
-  // --- CARD: INSTRUÇÕES DE USO (Deve vir logo após o bloco acima) ---
+
   pagina += "<div class='card'>";
   pagina += "<h3>Instruções de Uso</h3>";
   pagina += "<div class='info-content'>";
@@ -472,7 +459,7 @@ pagina += "<div class='card'>"; // O estilo 'card' já alinha o conteúdo princi
   pagina += "drawChart(data);";
 
 if (!modo_edicao) {
-    pagina += "setInterval(()=>{ location.reload(); },5000);"; // Desabilitado em modo_edicao
+    pagina += "setInterval(()=>{ location.reload(); },5000);"; 
   } else {
     pagina += "// Auto-refresh desabilitado: Modo de Edição ativo.";
   }
@@ -500,14 +487,13 @@ void setup() {
   Serial.begin(115200);
   delay(500);
   Serial.println("\n\n=== TERMOMETRO WIFI - MODO TEXTO PLANO ===");
-// --- ADICIONE ISTO AQUI ---
-// --- Inicialização dos pinos ---
-  pinMode(PINO_RELE_1, OUTPUT);   // Inicializa D1 [cite: 57]
-  digitalWrite(PINO_RELE_1, LOW); // D1 Desligado [cite: 57]
+
+  pinMode(PINO_RELE_1, OUTPUT);  
+  digitalWrite(PINO_RELE_1, LOW);
   
-  pinMode(PINO_RELE_2, OUTPUT);   // Inicializa D2
-  digitalWrite(PINO_RELE_2, LOW); // D2 Desligado
-  // --------------------------
+  pinMode(PINO_RELE_2, OUTPUT);  
+  digitalWrite(PINO_RELE_2, LOW); 
+
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(ssid_ap, password_ap, 1, 0);
   WiFi.channel(1);

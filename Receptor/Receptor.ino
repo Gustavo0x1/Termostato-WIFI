@@ -1,7 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <espnow.h>
 #include <ESP8266WebServer.h>
-#define PINO_RELE 5        /
+#define PINO_RELE 5        
 #define PINO_RELE_1 5 
 #define PINO_RELE_2 4 
 bool modo_edicao = false;
